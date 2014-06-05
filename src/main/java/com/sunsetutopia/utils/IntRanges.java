@@ -87,7 +87,7 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
                     newTransitions = addAtEnd(transitions, n, last, idx);
                 } else {
                     // interior segment
-                    newTransitions = addInterior(transitions, n, last, idx);
+                    newTransitions = addInterior(transitions, n, idx);
                 }
             }
 
@@ -107,7 +107,7 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
             return transitions;
         } else if (transitions[0] == n + 1) {
             // prepend to initial segment
-            int[] newTransitions = Arrays.copyOf(transitions, transitions.length);
+            int[] newTransitions = transitions.clone();
             newTransitions[0] = n;
             return newTransitions;
         } else {
@@ -124,9 +124,9 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
         if (idx % 2 == 1) {
             // goes to MAX_VALUE, already present
             return transitions;
-        } else if (n == last + 1) {
+        } else if (n == last) {
             //append to final segment
-            int[] newTransitions = Arrays.copyOf(transitions, transitions.length);
+            int[] newTransitions = transitions.clone();;
             newTransitions[transitions.length - 1] = n;
             return newTransitions;
         } else {
@@ -144,7 +144,7 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
         }
     }
 
-    private static int[] addInterior(int[] transitions, int n, final int last, final int idx) {
+    private static int[] addInterior(int[] transitions, int n, final int idx) {
         assert(idx >= 0);
         assert(idx < transitions.length);
         // assert not in a n...MAX_VALUE open segment either
@@ -155,7 +155,7 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
             if (n != transitions[idx + 1]) {
                 // nothing to do, already in
                 return transitions;
-            } else if ((n + 1) == transitions[idx + 2]) {
+            } else if (((idx + 2) < transitions.length) && ((n + 1) == transitions[idx + 2])) {
                 // need to merge segments
                 // looks like [idx(...), idx+1(n), idx+2(n+1), ...]
                 // drop idx+1 and idx+2
@@ -165,14 +165,17 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
                 return newTransitions;
             } else {
                 // just extend this one
-                int[] newTransitions = Arrays.copyOf(transitions, transitions.length);
+                int[] newTransitions = transitions.clone();
                 newTransitions[idx + 1] = n + 1;
                 return newTransitions;
             }
         } else {
-            if (n+1 == transitions[idx+1]) {
+            if (n == transitions[idx+1]) {
+                // start of an existing segment
+                return transitions;
+            } else if (n+1 == transitions[idx+1]) {
                 // extend next one back
-                int[] newTransitions = Arrays.copyOf(transitions, transitions.length);
+                int[] newTransitions = transitions.clone();
                 newTransitions[idx + 1] = n;
                 return newTransitions;
             } else {
@@ -189,7 +192,62 @@ public final class IntRanges extends AbstractSet<Integer> implements Cloneable {
     }
 
     public boolean remove(int n) {
-        throw new UnsupportedOperationException("TODO");
+        while (true) {
+            final int[] transitions = transitions();
+
+            if (transitions.length == 0) {
+                // not present
+                return false;
+            } else {
+                final int[] newTransitions;
+                final int last = transitions[transitions.length - 1];
+                final int idx = lastIndexSmallerThan(transitions, n);
+                if (idx == -1) {
+                    newTransitions = removeAtStart(transitions, n);
+                } else if (idx == transitions.length) {
+                    newTransitions = removeAtEnd(transitions, n, last, idx);
+                } else {
+                    // interior segment
+                    newTransitions = removeInterior(transitions, n, last, idx);
+                }
+
+                if (transitions == newTransitions) {
+                    return false;
+                } else {
+                    if (updateTransitions(transitions, newTransitions))
+                        return true;
+                    // update failed, try again
+                }
+            }
+        }
+    }
+
+    private static int[] removeAtStart(int[] transitions, int n) {
+        if (transitions[0] > n) {
+            // not in the set
+            return transitions;
+        } else if (transitions[0] == n) {
+            if (transitions[1] == n + 1) {
+                // drop the initial segment
+                return Arrays.copyOfRange(transitions, 2, transitions.length);
+            } else {
+                // truncate the initial segment
+                int[] newTransitions = transitions.clone();
+                newTransitions[0] += 1;
+                return newTransitions;
+            }
+        } else {
+            // punch a hole in the segment
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static int[] removeAtEnd(int[] transitions, int n, int last, int idx) {
+        throw new UnsupportedOperationException();
+    }
+
+    private static int[] removeInterior(int[] transitions, int n, int last, int idx) {
+        throw new UnsupportedOperationException();
     }
 
     // basic methods

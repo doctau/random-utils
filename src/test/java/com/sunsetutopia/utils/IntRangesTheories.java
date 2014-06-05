@@ -151,4 +151,44 @@ public class IntRangesTheories {
             assertTrue("r1=" + r1 + ", r2=" + r2, !r2.contains(i) == r3.contains(i));
         }
     }
+
+    @Test
+    public void addRemoveForward() {
+        IntRanges r = new IntRanges();
+
+        // step across in a few offsets, to catch bugs with continuous and alternating patterns
+        for (int step = 1; step <= 3; step++) {
+            // add the elements
+            for (int i = 1; i < 100; i += step)
+                assertTrue("step=" + step + ", i=" + i, r.add(i));
+
+            // they should already be there
+            for (int i = 1; i < 100; i += step)
+                assertFalse("step=" + step + ", i=" + i, r.add(i));
+
+            // now remove them all
+            for (int i = 1; i < 100; i += step)
+                assertTrue("step=" + step + ", i=" + i, r.remove(i));
+
+            assertTrue("step=" + step, r.isEmpty());
+        }
+    }
+
+    @Test
+    public void addRemoveBackwards() {
+        IntRanges r = new IntRanges();
+
+        for (int step = 1; step < 5; step++) {
+            for (int i = 100; i >= 1; i -= step)
+                assertTrue("step=" + step + ", i=" + i, r.add(i));
+
+            for (int i = 100; i >= 1; i -= step)
+                assertFalse("step=" + step + ", i=" + i, r.add(i));
+
+            for (int i = 100; i >= 1; i -= step)
+                assertTrue("step=" + step + ", i=" + i, r.remove(i));
+
+            assertTrue("step=" + step, r.isEmpty());
+        }
+    }
 }
